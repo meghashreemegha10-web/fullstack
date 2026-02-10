@@ -1,41 +1,46 @@
-import { auth, signOut } from "@/auth"
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
     const session = await auth()
 
-    return (
-        <div className="min-h-screen bg-gray-50 p-8">
-            <div className="mx-auto max-w-4xl space-y-8">
-                <header className="flex items-center justify-between border-b pb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">User Dashboard</h1>
-                        <p className="text-gray-500">Welcome back, {session?.user?.name || session?.user?.email}!</p>
-                    </div>
-                    <form
-                        action={async () => {
-                            "use server"
-                            await signOut()
-                        }}
-                    >
-                        <button className="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 border">
-                            Sign Out
-                        </button>
-                    </form>
-                </header>
+    if (!session?.user) {
+        redirect("/login")
+    }
 
-                <section className="bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-xl font-semibold mb-4">My Profile</h2>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div className="bg-gray-50 p-4 rounded border">
-                            <span className="text-xs font-semibold text-gray-500 uppercase">Role</span>
-                            <p className="font-mono">{session?.user?.role}</p>
+    if (!session.user.approved) {
+        redirect("/pending")
+    }
+
+    return (
+        <div className="container mx-auto py-10">
+            <h1 className="text-3xl font-bold mb-6">User Dashboard</h1>
+            <div className="bg-white shadow rounded-lg p-6">
+                <p className="text-gray-700 text-lg">
+                    Welcome back, <span className="font-semibold">{session.user.name}</span>!
+                </p>
+                <p className="mt-4 text-gray-600">
+                    You have successfully logged in and your account is approved.
+                </p>
+                <div className="mt-8 border-t pt-6">
+                    <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-sm text-gray-500">Email</p>
+                            <p className="font-medium">{session.user.email}</p>
                         </div>
-                        <div className="bg-gray-50 p-4 rounded border">
-                            <span className="text-xs font-semibold text-gray-500 uppercase">Email</span>
-                            <p>{session?.user?.email}</p>
+                        <div>
+                            <p className="text-sm text-gray-500">Role</p>
+                            <p className="font-medium">{session.user.role}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-500">Status</p>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Active
+                            </span>
                         </div>
                     </div>
-                </section>
+                </div>
             </div>
         </div>
     )

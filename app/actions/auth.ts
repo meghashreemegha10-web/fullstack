@@ -2,10 +2,38 @@
 
 import * as z from "zod"
 import { db } from "@/lib/db"
-import { RegisterSchema, LoginSchema } from "@/lib/schemas"
 import bcrypt from "bcryptjs"
-import { AuthError } from "next-auth"
+import { LoginSchema, RegisterSchema } from "@/lib/schemas"
 import { signIn } from "@/auth"
+import { AuthError } from "next-auth"
+
+export const login = async (values: z.infer<typeof LoginSchema>) => {
+    const validatedFields = LoginSchema.safeParse(values)
+
+    if (!validatedFields.success) {
+        return { error: "Invalid fields!" }
+    }
+
+    const { email, password } = validatedFields.data
+
+    try {
+        await signIn("credentials", {
+            email,
+            password,
+            redirectTo: "/dashboard", // Default redirect, middleware/callback might override
+        })
+    } catch (error) {
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case "CredentialsSignin":
+                    return { error: "Invalid credentials!" }
+                default:
+                    return { error: "Something went wrong!" }
+            }
+        }
+        throw error // Redirect throws an error, so we need to rethrow it
+    }
+}
 
 export const register = async (values: z.infer<typeof RegisterSchema>) => {
     const validatedFields = RegisterSchema.safeParse(values)
@@ -32,37 +60,10 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
             name,
             email,
             password: hashedPassword,
+            role: "USER", // Default role
+            approved: false, // Explicitly false
         },
     })
 
-    return { success: "Account created! Please wait for admin approval." }
-}
-
-
-export const login = async (values: z.infer<typeof LoginSchema>) => {
-    const validatedFields = LoginSchema.safeParse(values)
-
-    if (!validatedFields.success) {
-        return { error: "Invalid fields!" }
-    }
-
-    const { email, password } = validatedFields.data
-
-    try {
-        await signIn("credentials", {
-            email,
-            password,
-            redirectTo: "/dashboard",
-        })
-    } catch (error) {
-        if (error instanceof AuthError) {
-            switch (error.type) {
-                case "CredentialsSignin":
-                    return { error: "Invalid credentials!" }
-                default:
-                    return { error: "Something went wrong!" }
-            }
-        }
-        throw error
-    }
+    return { success: "User created! Please login." }
 }
