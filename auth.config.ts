@@ -3,6 +3,7 @@ import type { NextAuthConfig } from "next-auth"
 export const authConfig = {
     pages: {
         signIn: "/login",
+        newUser: "/register", // Redirect to register if new user
     },
     callbacks: {
         authorized({ auth, request: { nextUrl } }) {
@@ -11,22 +12,24 @@ export const authConfig = {
             const isOnAdmin = nextUrl.pathname.startsWith("/admin")
 
             if (isOnAdmin) {
+                // @ts-ignore
                 if (isLoggedIn && auth.user.role === "ADMIN") return true
                 return false // Redirect unauthenticated or non-admin users
             }
 
             if (isOnDashboard) {
+                // @ts-ignore
                 if (isLoggedIn && auth.user.approved) return true
                 return false
             }
 
             if (isLoggedIn) {
-                // Redirect authenticated users to dashboard or admin based on role
-                // This logic might need to be in the middleware or component if not here
                 if (nextUrl.pathname === "/" || nextUrl.pathname === "/login" || nextUrl.pathname === "/register") {
+                    // @ts-ignore
                     if (auth.user.role === "ADMIN") {
                         return Response.redirect(new URL("/admin", nextUrl))
                     }
+                    // @ts-ignore
                     if (auth.user.approved) {
                         return Response.redirect(new URL("/dashboard", nextUrl))
                     }
@@ -50,5 +53,5 @@ export const authConfig = {
             return session
         }
     },
-    providers: [], // Configured in auth.ts
+    providers: [],
 } satisfies NextAuthConfig
