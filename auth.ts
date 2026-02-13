@@ -21,8 +21,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
                     const passwordsMatch = await bcrypt.compare(password, user.password || "")
                     if (passwordsMatch) {
+                        // @ts-ignore
+                        if (user.rejected) {
+                            throw new Error("Account rejected.")
+                        }
                         if (!user.approved) {
-                            throw new Error("Account not approved yet.")
+                            throw new Error("Account waiting for approval.")
                         }
                         return user
                     }

@@ -24,7 +24,7 @@ export const authConfig = {
             }
 
             if (isLoggedIn) {
-                if (nextUrl.pathname === "/" || nextUrl.pathname === "/login" || nextUrl.pathname === "/register") {
+                if (nextUrl.pathname === "/login" || nextUrl.pathname === "/register") {
                     // @ts-ignore
                     if (auth.user.role === "ADMIN") {
                         return Response.redirect(new URL("/admin", nextUrl))

@@ -27,8 +27,12 @@ export async function rejectUser(userId: string) {
         throw new Error("Unauthorized")
     }
 
-    await db.user.delete({
+    await db.user.update({
         where: { id: userId },
+        data: {
+            approved: false,
+            rejected: true
+        },
     })
 
     revalidatePath("/admin")

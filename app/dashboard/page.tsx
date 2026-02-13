@@ -23,6 +23,24 @@ export default async function DashboardPage() {
                     You have successfully logged in and your account is approved.
                 </p>
                 <div className="mt-8 border-t pt-6">
+                    <h2 className="text-xl font-semibold mb-4">Available Tools</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white border rounded-lg p-6 hover:shadow-md transition cursor-pointer group">
+                            <h3 className="text-lg font-bold text-gray-800 group-hover:text-indigo-600">YouTube AI Summarizer</h3>
+                            <p className="text-gray-600 mt-2 mb-4">
+                                Generate clean study notes and summaries from YouTube videos using AI.
+                            </p>
+                            <a
+                                href="/dashboard/tools/youtube-summarizer"
+                                className="text-indigo-600 font-medium hover:underline"
+                            >
+                                Open Tool &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-8 border-t pt-6">
                     <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>

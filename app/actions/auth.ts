@@ -27,11 +27,21 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
             switch (error.type) {
                 case "CredentialsSignin":
                     return { error: "Invalid credentials!" }
+                case "CallbackRouteError":
+                    // @ts-ignore
+                    const errorMsg = error.cause?.err?.message;
+                    if (errorMsg === "Account waiting for approval.") {
+                        return { error: "Your account is waiting for approval." }
+                    }
+                    if (errorMsg === "Account rejected.") {
+                        return { error: "Your account has been rejected." }
+                    }
+                    return { error: "Invalid credentials!" }
                 default:
                     return { error: "Something went wrong!" }
             }
         }
-        throw error // Redirect throws an error, so we need to rethrow it
+        throw error
     }
 }
 
