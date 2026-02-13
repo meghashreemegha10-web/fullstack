@@ -9,5 +9,10 @@ export default auth((req) => {
 })
 
 export const config = {
-    matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+    // Exclude /api/summarize from NextAuth middleware
+    matcher: [
+        "/((?!.+\\.[\\w]+$|_next).*)",
+        "/",
+        "/(api|trpc)(?!/summarize)(.*)"
+    ],
 }
