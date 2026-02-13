@@ -24,15 +24,22 @@ export default function YouTubeSummarizerPage() {
                 body: JSON.stringify({ url }),
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.error || "Failed to generate summary");
+                // Try to parse error JSON, fallback to status text
+                let errorMessage = "Failed to generate summary";
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch {
+                    errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
             }
 
+            const data = await response.json();
             setSummary(data.summary);
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || "An unexpected error occurred");
         } finally {
             setLoading(false);
         }
@@ -63,8 +70,8 @@ export default function YouTubeSummarizerPage() {
                         type="submit"
                         disabled={loading}
                         className={`w-full py-3 px-4 rounded-md text-white font-medium transition-colors ${loading
-                                ? "bg-indigo-400 cursor-not-allowed"
-                                : "bg-indigo-600 hover:bg-indigo-700"
+                            ? "bg-indigo-400 cursor-not-allowed"
+                            : "bg-indigo-600 hover:bg-indigo-700"
                             }`}
                     >
                         {loading ? "Analyzing Video..." : "Summarize & Generate Notes"}
