@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
 
     try {
       if (file.type === "application/pdf") {
+        // Use true for boolean argument in pdf2json v3+
         const pdfParser = new PDFParser(null, true);
 
         content = await new Promise((resolve, reject) => {
