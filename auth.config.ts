@@ -42,6 +42,7 @@ export const authConfig = {
             if (user) {
                 token.role = (user as any).role
                 token.approved = (user as any).approved
+                token.id = user.id
             }
             return token
         },
@@ -49,6 +50,7 @@ export const authConfig = {
             if (token && session.user) {
                 (session.user as any).role = token.role;
                 (session.user as any).approved = token.approved;
+                session.user.id = token.sub as string;
             }
             return session
         }

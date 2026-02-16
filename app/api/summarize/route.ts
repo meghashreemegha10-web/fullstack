@@ -1,25 +1,20 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { fetchTranscript } from "@/lib/youtube";
+import { fetchYouTubeTranscriptAPI, extractVideoId } from "@/lib/youtube-api";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
     try {
         const { url } = await req.json();
 
-        // Simple video ID extraction
-        let videoId = "";
-        if (url.includes("youtu.be/")) {
-            videoId = url.split("youtu.be/")[1]?.split("?")[0];
-        } else if (url.includes("v=")) {
-            videoId = url.split("v=")[1]?.split("&")[0];
-        }
+        // Extract video ID using improved function
+        const videoId = extractVideoId(url);
 
         if (!videoId) {
             return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 });
         }
 
         console.log(`Fetching transcript for ${videoId}...`);
-        const transcript = await fetchTranscript(videoId);
+        const transcript = await fetchYouTubeTranscriptAPI(videoId);
 
         if (!transcript) {
             return NextResponse.json({ error: "Could not fetch transcript. Video might not have captions." }, { status: 404 });

@@ -1,0 +1,5 @@
+This is a test document about the history of artificial intelligence.
+AI was founded as an academic discipline in 1956.
+The field went through multiple cycles of optimism and disappointment.
+Deep learning revolutionized the field in the 2010s.
+Generative AI became popular in the 2020s.

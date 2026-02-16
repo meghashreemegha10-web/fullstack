@@ -9,10 +9,8 @@ export default auth((req) => {
 })
 
 export const config = {
-    // Exclude /api/summarize from NextAuth middleware
+    // Protect all routes except API routes, static files, and Next.js internals
     matcher: [
-        "/((?!.+\\.[\\w]+$|_next).*)",
-        "/",
-        "/(api|trpc)(?!/summarize)(.*)"
+        '/((?!api|_next/static|_next/image|favicon.ico).*)',
     ],
 }

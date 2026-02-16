@@ -37,6 +37,19 @@ export default async function DashboardPage() {
                                 Open Tool &rarr;
                             </a>
                         </div>
+
+                        <div className="bg-white border rounded-lg p-6 hover:shadow-md transition cursor-pointer group">
+                            <h3 className="text-lg font-bold text-gray-800 group-hover:text-indigo-600">Document Q&A</h3>
+                            <p className="text-gray-600 mt-2 mb-4">
+                                Upload PDFs or text files and ask questions to get AI-generated answers.
+                            </p>
+                            <a
+                                href="/dashboard/documents"
+                                className="text-indigo-600 font-medium hover:underline"
+                            >
+                                Open Tool &rarr;
+                            </a>
+                        </div>
                     </div>
                 </div>
 
