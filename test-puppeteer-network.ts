@@ -29,7 +29,7 @@ async function testPuppeteerNetwork() {
             req.continue();
         });
 
-        const captionPromise = new Promise((resolve, reject) => {
+        const captionPromise = new Promise<string | null>((resolve, reject) => {
             page.on('response', async (response) => {
                 const url = response.url();
                 if (url.includes('timedtext')) {
