@@ -14,7 +14,7 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col items-center justify-center p-24 bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex flex-col gap-8">
         <h1 className="text-5xl font-bold text-center">
-          Secure Role-Based Dashboard
+          Secure Role-Based Dashboard v2
         </h1>
         <p className="text-xl text-center max-w-2xl text-indigo-100">
           A production-ready Next.js application with robust authentication,
