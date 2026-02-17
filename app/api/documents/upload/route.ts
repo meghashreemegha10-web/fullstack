@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-// @ts-ignore
-import PDFParser from "pdf2json";
+import { PDFParse } from "pdf-parse";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +10,7 @@ export async function POST(req: NextRequest) {
 
     if (!session || !session.user || !session.user.id) {
       console.log("Unauthorized: Session or User ID missing");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized: You must be logged in to upload documents." }, { status: 401 });
     }
 
     const formData = await req.formData();
@@ -33,17 +32,10 @@ export async function POST(req: NextRequest) {
 
     try {
       if (file.type === "application/pdf") {
-        // Use true for boolean argument in pdf2json v3+
-        const pdfParser = new PDFParser(null, true);
-
-        content = await new Promise((resolve, reject) => {
-          pdfParser.on("pdfParser_dataError", (errData: any) => reject(new Error(errData.parserError)));
-          pdfParser.on("pdfParser_dataReady", (pdfData: any) => {
-            resolve(pdfParser.getRawTextContent());
-          });
-          pdfParser.parseBuffer(buffer);
-        });
-
+        const parser = new PDFParse({ data: buffer });
+        const data = await parser.getText();
+        content = data.text;
+        await parser.destroy();
       } else if (file.type === "text/plain") {
         content = buffer.toString("utf-8");
       } else {
@@ -59,11 +51,11 @@ export async function POST(req: NextRequest) {
 
     // Basic cleaning of content
     content = content.replace(/\s+/g, " ").trim();
-    // Decode URI components if pdf2json returns encoded strings (it often does)
+    // Decode URI components if needed (sometimes pdf extraction leaves artifacts)
     try {
       content = decodeURIComponent(content);
     } catch (e) {
-      // Ignore if decoding fails, strict mode might catch valid text
+      // Ignore if decoding fails
     }
 
     if (!content || content.length < 10) {

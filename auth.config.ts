@@ -18,9 +18,8 @@ export const authConfig = {
             }
 
             if (isOnDashboard) {
-                // @ts-ignore
-                if (isLoggedIn && auth.user.approved) return true
-                return false
+                // ALLOW GUESTS: Return true even if not logged in
+                return true
             }
 
             if (isLoggedIn) {
