@@ -1,4 +1,4 @@
-import { auth } from "@/auth"
+import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
@@ -14,7 +14,19 @@ export default async function DashboardPage() {
 
     return (
         <div className="container mx-auto py-10">
-            <h1 className="text-3xl font-bold mb-6">User Dashboard</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold">User Dashboard</h1>
+                <form
+                    action={async () => {
+                        "use server"
+                        await signOut({ redirectTo: "/" })
+                    }}
+                >
+                    <button type="submit" className="text-sm text-red-600 hover:text-red-800 font-medium border border-red-200 px-3 py-1 rounded hover:bg-red-50 transition-colors">
+                        Sign Out
+                    </button>
+                </form>
+            </div>
             <div className="bg-white shadow rounded-lg p-6">
                 <p className="text-gray-700 text-lg">
                     Welcome back, <span className="font-semibold">{session.user.name}</span>!
