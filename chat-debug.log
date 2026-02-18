@@ -1,0 +1,156 @@
+[2026-02-18T17:28:40.682Z] Chat Request: {
+  "workspaceId": "cmls4s23u00013l6qhmzonuok",
+  "deepSearch": true,
+  "message": "briefly describe about resume uses ,quality ,updating, and more related information"
+}
+
+[2026-02-18T17:28:44.904Z] Document Context Length: 2140
+
+[2026-02-18T17:28:44.905Z] Starting Deep Search: {
+  "query": "briefly describe about resume uses ,quality ,updating, and more related information"
+}
+
+[2026-02-18T17:28:46.149Z] Deep Search Results: {
+  "count": 0
+}
+
+[2026-02-18T17:28:47.021Z] AI Response Generated: {
+  "length": 69
+}
+
+[2026-02-18T17:29:38.623Z] Chat Request: {
+  "workspaceId": "cmls4s23u00013l6qhmzonuok",
+  "deepSearch": true,
+  "message": "give me summary of the resume"
+}
+
+[2026-02-18T17:29:42.784Z] Document Context Length: 2140
+
+[2026-02-18T17:29:42.785Z] Starting Deep Search: {
+  "query": "give me summary of the resume"
+}
+
+[2026-02-18T17:29:45.271Z] Deep Search Results: {
+  "count": 0
+}
+
+[2026-02-18T17:29:46.494Z] AI Response Generated: {
+  "length": 1250
+}
+
+[2026-02-18T17:45:15.627Z] Chat Request: {
+  "workspaceId": "cmls4s23u00013l6qhmzonuok",
+  "deepSearch": true,
+  "message": "Meghashree resume1.pdf explain me this pdf line by line"
+}
+
+[2026-02-18T17:45:23.251Z] Document Context Length: 2140
+
+[2026-02-18T17:45:23.252Z] Starting Deep Search: {
+  "query": "Meghashree resume1.pdf explain me this pdf line by line"
+}
+
+[2026-02-18T17:45:26.153Z] Deep Search Results: {
+  "count": 0
+}
+
+[2026-02-18T17:45:29.158Z] AI Response Generated: {
+  "length": 2734
+}
+
+[2026-02-18T17:47:49.910Z] Chat Request: {
+  "workspaceId": "cmls4s23u00013l6qhmzonuok",
+  "deepSearch": false,
+  "message": "Tell me about R programming language"
+}
+
+[2026-02-18T17:47:59.578Z] Document Context Length: 2140
+
+[2026-02-18T17:48:01.071Z] AI Response Generated: {
+  "length": 69
+}
+
+[2026-02-18T17:49:58.468Z] Chat Request: {
+  "workspaceId": "cmls4s23u00013l6qhmzonuok",
+  "deepSearch": true,
+  "message": "Tell me about R programming language"
+}
+
+[2026-02-18T17:50:06.968Z] Document Context Length: 5243
+
+[2026-02-18T17:50:06.969Z] Starting Deep Search: {
+  "query": "Tell me about R programming language"
+}
+
+[2026-02-18T17:50:10.003Z] Deep Search Results: {
+  "count": 0
+}
+
+[2026-02-18T17:50:12.439Z] AI Response Generated: {
+  "length": 1542
+}
+
+[2026-02-18T18:27:46.633Z] Chat Request: {
+  "workspaceId": "cmls4s23u00013l6qhmzonuok",
+  "deepSearch": false,
+  "message": "\"Tell me about R programming\"."
+}
+
+[2026-02-18T18:27:54.359Z] Document Context Length: 5243
+
+[2026-02-18T18:27:56.353Z] AI Response Generated: {
+  "length": 2202
+}
+
+[2026-02-18T18:28:29.348Z] Chat Request: {
+  "workspaceId": "cmls4s23u00013l6qhmzonuok",
+  "deepSearch": true,
+  "message": "\"Tell me about R programming\"."
+}
+
+[2026-02-18T18:28:34.713Z] Document Context Length: 5243
+
+[2026-02-18T18:28:34.714Z] Starting Deep Search: {
+  "query": "\"Tell me about R programming\"."
+}
+
+[2026-02-18T18:28:36.811Z] Deep Search Results: {
+  "count": 0
+}
+
+[2026-02-18T18:28:50.826Z] AI Response Generated: {
+  "length": 2284
+}
+
+[2026-02-18T18:32:50.084Z] Chat Request: {
+  "workspaceId": "cmls4s23u00013l6qhmzonuok",
+  "deepSearch": false,
+  "message": "\"Tell me about R programming\"."
+}
+
+[2026-02-18T18:32:58.190Z] Document Context Length: 5243
+
+[2026-02-18T18:33:00.613Z] AI Response Generated: {
+  "length": 2261
+}
+
+[2026-02-18T18:33:29.198Z] Chat Request: {
+  "workspaceId": "cmls4s23u00013l6qhmzonuok",
+  "deepSearch": true,
+  "message": "\"Tell me about R programming\"."
+}
+
+[2026-02-18T18:33:35.909Z] Document Context Length: 5243
+
+[2026-02-18T18:33:35.910Z] Starting Deep Search: {
+  "query": "\"Tell me about R programming\"."
+}
+
+[2026-02-18T18:33:36.956Z] Deep Search Results: {
+  "count": 0
+}
+
+[2026-02-18T18:33:48.684Z] AI Response Generated: {
+  "length": 2000
+}
+

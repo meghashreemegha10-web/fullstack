@@ -71,5 +71,6 @@ model Message {
   document    Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
   workspaceId String?
   workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  // Fix for deployment: documentId should be optional
   createdAt  DateTime @default(now())
 }

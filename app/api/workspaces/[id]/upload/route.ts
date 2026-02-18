@@ -1,35 +1,73 @@
-
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { generateEmbedding, generateEmbeddings } from "@/lib/embeddings";
-import { splitTextIntoChunks } from "@/lib/chunking";
+import { generateEmbeddings } from "@/lib/embeddings";
 import { NextResponse } from "next/server";
-import { PDFParse } from "pdf-parse";
+import { z } from "zod";
+// @ts-ignore
+const { PDFParse } = require("pdf-parse");
 
-// Helper to parse PDF buffer
-async function parsePDF(buffer: Buffer): Promise<string> {
-    try {
+import fs from "fs";
+import path from "path";
+
+// Increase max duration for processing
+export const maxDuration = 60;
+
+const logFile = path.join(process.cwd(), "upload-debug.log");
+
+function logError(message: string, error: any) {
+    const timestamp = new Date().toISOString();
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : "";
+    const logEntry = `[${timestamp}] ${message}: ${errorMessage}\nStack: ${stack}\n\n`;
+    fs.appendFileSync(logFile, logEntry);
+    console.error(message, error);
+}
+
+const uploadSchema = z.object({
+    files: z.any(),
+});
+
+async function extractTextFromFile(file: File): Promise<string> {
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    if (file.type === "application/pdf") {
         const parser = new PDFParse({ data: buffer });
         const data = await parser.getText();
-        await parser.destroy();
         return data.text;
-    } catch (error) {
-        console.error("Error parsing PDF:", error);
-        throw error;
+    } else {
+        // Assume text/plain or markdown
+        return buffer.toString("utf-8");
     }
+}
+
+function chunkText(text: string, chunkSize: number = 1000, overlap: number = 100): string[] {
+    const chunks: string[] = [];
+    let start = 0;
+
+    while (start < text.length) {
+        const end = Math.min(start + chunkSize, text.length);
+        chunks.push(text.slice(start, end));
+        start += chunkSize - overlap;
+    }
+
+    return chunks;
 }
 
 export async function POST(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    props: { params: Promise<{ id: string }> }
 ) {
+    const params = await props.params;
+    logError("Upload request received", { id: params.id });
     try {
         const session = await auth();
         if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { id: workspaceId } = await params;
+        const formData = await req.formData();
+        const files = formData.getAll("files") as File[];
+        const workspaceId = params.id;
 
         // Verify workspace access
         const workspace = await db.workspace.findUnique({
@@ -40,94 +78,60 @@ export async function POST(
         });
 
         if (!workspace) {
-            return new NextResponse("Workspace not found", { status: 404 });
-        }
-
-        const formData = await req.formData();
-        const files = formData.getAll("files") as File[];
-
-        if (!files || files.length === 0) {
-            return new NextResponse("No files provided", { status: 400 });
+            return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
         }
 
         const results = [];
 
         for (const file of files) {
-            const buffer = Buffer.from(await file.arrayBuffer());
-            let content = "";
-
-            if (file.type === "application/pdf") {
-                try {
-                    content = await parsePDF(buffer);
-                } catch (e) {
-                    console.error(`Error parsing PDF ${file.name}: `, e);
-                    results.push({ file: file.name, status: "error", error: "Failed to parse PDF" });
+            try {
+                if (!file.name.match(/\.(pdf|txt|md)$/i)) {
+                    results.push({ file: file.name, status: "error", error: "Unsupported file type" });
                     continue;
                 }
-            } else {
-                // Assume text
-                content = buffer.toString("utf-8");
-            }
 
-            if (!content || content.trim().length === 0) {
-                results.push({ file: file.name, status: "error", error: "Empty content" });
-                continue;
-            }
+                const text = await extractTextFromFile(file);
 
-            // Create Document
-            const document = await db.document.create({
-                data: {
-                    title: file.name,
-                    content: content, // Optional: store full content if needed, but chunks are key
-                    userId: session.user.id,
-                    workspaceId: workspace.id,
-                },
-            });
+                // Create Document record
+                const document = await db.document.create({
+                    data: {
+                        title: file.name,
+                        content: text, // Store full text (optional)
+                        userId: session.user.id,
+                        workspaceId: workspace.id,
+                    },
+                });
 
-            // Split into chunks
-            const chunks = splitTextIntoChunks(content);
+                // Chunk text
+                const chunks = chunkText(text);
 
-            // Generate embeddings
-            // We can do this in batch or one by one. 
-            // For simplicity and error handling, let's do batch but handle errors if needed.
-            // Ideally we should have a retry mechanism or queue, but for this MVP direct is fine.
-            try {
+                // Generate embeddings in batches
                 const embeddings = await generateEmbeddings(chunks);
 
-                // Save chunks
-                const chunkData = chunks.map((chunk, index) => ({
-                    content: chunk,
-                    embedding: embeddings[index],
-                    metadata: { source: file.name, chunkIndex: index },
-                    documentId: document.id,
-                }));
-
-                // Prisma createMany is not supported for lists of floats in some versions/adapters easily without raw, 
-                // but let's try standard createMany first. If it fails due to vector type issues, we might need loop.
-                // Actually, DocumentChunk embedding is Float[], which is supported natively by Prisma with Postgres.
-                // But `createMany` might not handle complex types in all cases. Let's try loop for safety if unsure, 
-                // or createMany if confident. Let's use loop for now to be safe with vector arrays.
-                // Wait, createMany is much faster. Let's try to use it if we can.
-                // Issue: sending large arrays in createMany parameters.
-
-                // Let's use a transaction or parallel promises for `create`
+                // Save chunks with embeddings
                 await db.$transaction(
-                    chunkData.map(data => db.documentChunk.create({ data }))
+                    chunks.map((chunk, index) =>
+                        db.documentChunk.create({
+                            data: {
+                                content: chunk,
+                                embedding: embeddings[index],
+                                documentId: document.id,
+                                metadata: { index },
+                            },
+                        })
+                    )
                 );
 
                 results.push({ file: file.name, status: "success", documentId: document.id });
-
-            } catch (e) {
-                console.error(`Error processing embeddings for ${file.name}: `, e);
-                // Cleanup document if failed?
-                await db.document.delete({ where: { id: document.id } });
-                results.push({ file: file.name, status: "error", error: "Embedding generation failed" });
+            } catch (error) {
+                logError(`Error processing file ${file.name}`, error);
+                results.push({ file: file.name, status: "error", error: "Processing failed" });
             }
         }
 
         return NextResponse.json({ results });
     } catch (error) {
-        console.error("Upload error:", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
+        logError("Upload error", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

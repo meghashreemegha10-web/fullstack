@@ -11,21 +11,14 @@ export function cosineSimilarity(a: number[], b: number[]): number {
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-export interface ScoredChunk {
-    id: string;
-    score: number;
-    documentId: string;
-}
-
-export function findMostSimilarChunks(
+export function findMostSimilarChunks<T extends { embedding: number[] }>(
     queryEmbedding: number[],
-    chunks: { id: string; embedding: number[]; documentId: string }[],
+    chunks: T[],
     topK: number = 5
-): ScoredChunk[] {
+): (T & { score: number })[] {
     const scored = chunks.map((chunk) => ({
-        id: chunk.id,
+        ...chunk,
         score: cosineSimilarity(queryEmbedding, chunk.embedding),
-        documentId: chunk.documentId,
     }));
 
     scored.sort((a, b) => b.score - a.score);

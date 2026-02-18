@@ -1,0 +1,91 @@
+[2026-02-18T14:48:21.132Z] Upload request received: [object Object]
+Stack: 
+
+[2026-02-18T14:51:34.652Z] Upload request received: [object Object]
+Stack: 
+
+[2026-02-18T14:51:35.441Z] Upload error: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].workspace.findUnique()` invocation in
+C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\.next\dev\server\chunks\[root-of-the-server]__d3336b8a._.js:340:157
+
+  337 const files = formData.getAll("files");
+  338 const workspaceId = params.id;
+  339 // Verify workspace access
+→ 340 const workspace = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].workspace.findUnique({
+        where: {
+          id: undefined,
+          userId: "cmls4q8d00000pez9tpkpc3nm",
+      ?   AND?: WorkspaceWhereInput | WorkspaceWhereInput[],
+      ?   OR?: WorkspaceWhereInput[],
+      ?   NOT?: WorkspaceWhereInput | WorkspaceWhereInput[],
+      ?   name?: StringFilter | String,
+      ?   description?: StringNullableFilter | String | Null,
+      ?   createdAt?: DateTimeFilter | DateTime,
+      ?   updatedAt?: DateTimeFilter | DateTime,
+      ?   user?: UserRelationFilter | UserWhereInput,
+      ?   documents?: DocumentListRelationFilter,
+      ?   messages?: MessageListRelationFilter
+        }
+      })
+
+Argument `where` of type WorkspaceWhereUniqueInput needs at least one of `id` arguments. Available options are marked with ?.
+Stack: PrismaClientValidationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].workspace.findUnique()` invocation in
+C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\.next\dev\server\chunks\[root-of-the-server]__d3336b8a._.js:340:157
+
+  337 const files = formData.getAll("files");
+  338 const workspaceId = params.id;
+  339 // Verify workspace access
+→ 340 const workspace = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].workspace.findUnique({
+        where: {
+          id: undefined,
+          userId: "cmls4q8d00000pez9tpkpc3nm",
+      ?   AND?: WorkspaceWhereInput | WorkspaceWhereInput[],
+      ?   OR?: WorkspaceWhereInput[],
+      ?   NOT?: WorkspaceWhereInput | WorkspaceWhereInput[],
+      ?   name?: StringFilter | String,
+      ?   description?: StringNullableFilter | String | Null,
+      ?   createdAt?: DateTimeFilter | DateTime,
+      ?   updatedAt?: DateTimeFilter | DateTime,
+      ?   user?: UserRelationFilter | UserWhereInput,
+      ?   documents?: DocumentListRelationFilter,
+      ?   messages?: MessageListRelationFilter
+        }
+      })
+
+Argument `where` of type WorkspaceWhereUniqueInput needs at least one of `id` arguments. Available options are marked with ?.
+    at wn (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async POST (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\.next\dev\server\chunks\[root-of-the-server]__d3336b8a._.js:340:27)
+    at async AppRouteRouteModule.do (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\.next\dev\server\chunks\node_modules_next_793adf64._.js:17148:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\.next\dev\server\chunks\node_modules_next_793adf64._.js:17211:32)
+    at async Module.handler (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\.next\dev\server\chunks\node_modules_next_793adf64._.js:17264:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\base-server.js:1442:9)
+    at async DevServer.renderPageComponent (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\base-server.js:1544:32)
+    at async DevServer.pipeImpl (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\next-server.js:395:17)
+    at async DevServer.handleRequestImpl (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\base-server.js:929:17)
+    at async C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\dev\next-dev-server.js:387:20
+    at async Span.traceAsyncFn (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\dev\next-dev-server.js:383:24)
+    at async invokeRender (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\lib\router-server.js:248:21)
+    at async handleRequest (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\lib\router-server.js:447:24)
+    at async requestHandlerImpl (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\lib\router-server.js:496:13)
+    at async Server.requestListener (C:\Users\Admin\.gemini\antigravity\scratch\admin-role-dashboard\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-02-18T14:54:21.811Z] Upload request received: [object Object]
+Stack: 
+
+[2026-02-18T14:57:46.896Z] Upload request received: [object Object]
+Stack: 
+
+[2026-02-18T17:46:37.779Z] Upload request received: [object Object]
+Stack: 
+

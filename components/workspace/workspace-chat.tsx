@@ -19,6 +19,7 @@ export function WorkspaceChat({ workspaceId, initialMessages }: WorkspaceChatPro
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [deepSearch, setDeepSearch] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -46,7 +47,10 @@ export function WorkspaceChat({ workspaceId, initialMessages }: WorkspaceChatPro
             const res = await fetch(`/api/workspaces/${workspaceId}/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userMessage.content }),
+                body: JSON.stringify({
+                    message: userMessage.content,
+                    deepSearch: deepSearch
+                }),
             });
 
             if (!res.ok) {
@@ -113,22 +117,36 @@ export function WorkspaceChat({ workspaceId, initialMessages }: WorkspaceChatPro
             </div>
 
             <div className="p-4 bg-white border-t">
-                <form onSubmit={handleSubmit} className="flex gap-4">
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask a question about your documents..."
-                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
-                        disabled={isLoading}
-                    />
-                    <button
-                        type="submit"
-                        disabled={isLoading || !input.trim()}
-                        className="bg-indigo-600 text-white p-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <Send className="w-5 h-5" />
-                    </button>
+                <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                    <div className="flex items-end gap-3">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Ask a question about your documents..."
+                            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                            disabled={isLoading}
+                        />
+                        <button
+                            type="submit"
+                            disabled={isLoading || !input.trim()}
+                            className="bg-indigo-600 text-white p-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <Send className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="deepSearch"
+                            checked={deepSearch}
+                            onChange={(e) => setDeepSearch(e.target.checked)}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="deepSearch" className="text-sm text-gray-700 select-none cursor-pointer">
+                            Deep Search (Search web for extra context)
+                        </label>
+                    </div>
                 </form>
             </div>
         </div>
