@@ -3,6 +3,7 @@
 import { approveUser, rejectUser, changeRole } from "@/app/actions/admin"
 import { Role } from "@prisma/client"
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 
 interface User {
     id: string
@@ -10,32 +11,61 @@ interface User {
     email: string
     role: Role
     approved: boolean
+    rejected: boolean
     createdAt: Date
 }
 
 export function UserManagementTable({ users }: { users: User[] }) {
+    const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [roleMap, setRoleMap] = useState<Record<string, Role>>({})
 
+    const refresh = () => router.refresh()
+
     const handleApprove = (id: string) => {
-        startTransition(() => {
-            approveUser(id)
+        startTransition(async () => {
+            await approveUser(id)
+            refresh()
         })
     }
 
     const handleReject = (id: string) => {
-        if (confirm("Are you sure you want to delete this user?")) {
-            startTransition(() => {
-                rejectUser(id)
+        if (confirm("Are you sure you want to reject/delete this user?")) {
+            startTransition(async () => {
+                await rejectUser(id)
+                refresh()
             })
         }
     }
 
     const handleRoleChange = (id: string, newRole: Role) => {
         setRoleMap(prev => ({ ...prev, [id]: newRole }))
-        startTransition(() => {
-            changeRole(id, newRole)
+        startTransition(async () => {
+            await changeRole(id, newRole)
+            refresh()
         })
+    }
+
+    const getStatusBadge = (user: User) => {
+        if (user.rejected) {
+            return (
+                <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                    Rejected
+                </span>
+            )
+        }
+        if (user.approved) {
+            return (
+                <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                    Approved
+                </span>
+            )
+        }
+        return (
+            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                Pending
+            </span>
+        )
     }
 
     return (
@@ -47,6 +77,7 @@ export function UserManagementTable({ users }: { users: User[] }) {
                         <th className="px-6 py-3">Email</th>
                         <th className="px-6 py-3">Role</th>
                         <th className="px-6 py-3">Status</th>
+                        <th className="px-6 py-3">Joined</th>
                         <th className="px-6 py-3">Actions</th>
                     </tr>
                 </thead>
@@ -69,39 +100,45 @@ export function UserManagementTable({ users }: { users: User[] }) {
                                 </select>
                             </td>
                             <td className="px-6 py-4">
-                                {user.approved ? (
-                                    <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                                        Approved
-                                    </span>
-                                ) : (
-                                    <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                                        Pending
-                                    </span>
-                                )}
+                                {getStatusBadge(user)}
+                            </td>
+                            <td className="px-6 py-4 text-xs text-gray-400">
+                                {new Date(user.createdAt).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 space-x-2">
-                                {!user.approved && (
+                                {!user.approved && !user.rejected && (
+                                    <button
+                                        onClick={() => handleApprove(user.id)}
+                                        disabled={isPending}
+                                        className="font-medium text-green-600 hover:underline disabled:opacity-50"
+                                    >
+                                        Approve
+                                    </button>
+                                )}
+                                {user.rejected && (
                                     <button
                                         onClick={() => handleApprove(user.id)}
                                         disabled={isPending}
                                         className="font-medium text-blue-600 hover:underline disabled:opacity-50"
                                     >
-                                        Approve
+                                        Re-approve
                                     </button>
                                 )}
-                                <button
-                                    onClick={() => handleReject(user.id)}
-                                    disabled={isPending}
-                                    className="font-medium text-red-600 hover:underline disabled:opacity-50"
-                                >
-                                    Reject/Delete
-                                </button>
+                                {!user.rejected && (
+                                    <button
+                                        onClick={() => handleReject(user.id)}
+                                        disabled={isPending}
+                                        className="font-medium text-red-600 hover:underline disabled:opacity-50"
+                                    >
+                                        Reject
+                                    </button>
+                                )}
                             </td>
                         </tr>
                     ))}
                     {users.length === 0 && (
                         <tr>
-                            <td colSpan={5} className="text-center py-4">No users found.</td>
+                            <td colSpan={6} className="text-center py-6 text-gray-400">No users found.</td>
                         </tr>
                     )}
                 </tbody>
