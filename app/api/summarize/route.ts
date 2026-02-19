@@ -58,7 +58,7 @@ async function summarizeWithGemini(ctx: PromptContext): Promise<string> {
     if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const result = await model.generateContent(buildPrompt(ctx));
     const text = result.response.text();
@@ -113,7 +113,7 @@ export async function POST(req: Request) {
 
         try {
             summary = await summarizeWithGemini(ctx);
-            usedModel = "gemini-1.5-flash-latest";
+            usedModel = "gemini-2.0-flash";
             console.log("[Summarize] ✅ Gemini succeeded");
         } catch (geminiError: any) {
             console.warn(`[Summarize] ⚠️ Gemini failed: ${geminiError.message} — falling back to Groq`);
