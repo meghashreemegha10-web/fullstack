@@ -1,10 +1,6 @@
 /**
  * Supadata API client for YouTube transcript fetching.
- * Supadata is a dedicated transcript service that works on restricted and
- * music videos that the standard youtube-transcript library often fails on.
- *
  * Docs: https://supadata.ai/documentation
- * Endpoint: GET https://api.supadata.ai/v1/youtube/transcript
  */
 
 const SUPADATA_BASE = "https://api.supadata.ai/v1";
@@ -22,11 +18,17 @@ interface SupadataResponse {
     lang?: string;
 }
 
+export interface TranscriptResult {
+    transcript: string;
+    title?: string;   // Video title from Supadata (if available)
+    lang?: string;
+}
+
 /**
- * Fetch plain-text transcript from Supadata for a given YouTube video ID.
- * Throws if the API key is missing, the video has no transcript, or the request fails.
+ * Fetch transcript + metadata from Supadata for a given YouTube video ID.
+ * Returns { transcript, title } — throws on failure.
  */
-export async function fetchSupadataTranscript(videoId: string): Promise<string> {
+export async function fetchSupadataTranscript(videoId: string): Promise<TranscriptResult> {
     const apiKey = process.env.SUPADATA_API_KEY;
 
     if (!apiKey || apiKey === "your_supadata_key_here") {
@@ -42,7 +44,6 @@ export async function fetchSupadataTranscript(videoId: string): Promise<string> 
             "x-api-key": apiKey,
             "Accept": "application/json",
         },
-        // 30 second timeout
         signal: AbortSignal.timeout(30_000),
     });
 
@@ -53,21 +54,20 @@ export async function fetchSupadataTranscript(videoId: string): Promise<string> 
     }
 
     const data: SupadataResponse = await res.json();
+    const { title, lang } = data;
 
-    // Supadata returns content as a plain string when text=true
+    // content is a plain string when text=true
     if (typeof data.content === "string") {
-        if (!data.content.trim()) {
-            throw new Error("Supadata returned an empty transcript.");
-        }
-        console.log(`[Supadata] ✅ Got transcript (${data.content.length} chars)${data.title ? ` for "${data.title}"` : ""}`);
-        return data.content;
+        if (!data.content.trim()) throw new Error("Supadata returned an empty transcript.");
+        console.log(`[Supadata] ✅ Got transcript (${data.content.length} chars)${title ? ` for "${title}"` : ""}`);
+        return { transcript: data.content, title, lang };
     }
 
-    // Fallback: content is an array of segments
+    // Fallback: array of segments
     if (Array.isArray(data.content) && data.content.length > 0) {
-        const text = data.content.map((s) => s.text).join(" ");
-        console.log(`[Supadata] ✅ Got transcript from segments (${text.length} chars)`);
-        return text;
+        const transcript = data.content.map((s) => s.text).join(" ");
+        console.log(`[Supadata] ✅ Got transcript from segments (${transcript.length} chars)`);
+        return { transcript, title, lang };
     }
 
     throw new Error("Supadata returned no transcript content for this video.");

@@ -1,21 +1,60 @@
 import { google } from 'googleapis';
 import { YoutubeTranscript } from 'youtube-transcript';
-import { fetchSupadataTranscript } from './supadata';
+import { fetchSupadataTranscript, TranscriptResult } from './supadata';
+
+/**
+ * Fetch YouTube video title + channel name using the YouTube Data API.
+ * Only needs an API key (no OAuth). Returns undefined values if it fails.
+ */
+export async function fetchVideoMetadata(videoId: string): Promise<{ title?: string; channelTitle?: string }> {
+    const apiKey = process.env.YOUTUBE_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) return {};
+
+    try {
+        const res = await fetch(
+            `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${encodeURIComponent(videoId)}&key=${encodeURIComponent(apiKey)}`,
+            { signal: AbortSignal.timeout(8_000) }
+        );
+        if (!res.ok) return {};
+        const json = await res.json();
+        const snippet = json?.items?.[0]?.snippet;
+        return {
+            title: snippet?.title,
+            channelTitle: snippet?.channelTitle,
+        };
+    } catch {
+        return {};
+    }
+}
 
 /**
  * Fetch YouTube transcript using a 3-tier hybrid approach:
  * 1. Supadata API        — Best for all videos (including restricted / music)
  * 2. youtube-transcript  — Fastest but fails on restricted content
  * 3. YouTube Data API    — OAuth/Key fallback for owned videos
+ *
+ * Also fetches video metadata in parallel for richer AI context.
+ * Returns { transcript, title, channelTitle }
  */
-export async function fetchYouTubeTranscriptAPI(videoId: string): Promise<string> {
+export async function fetchYouTubeTranscriptAPI(videoId: string): Promise<TranscriptResult & { channelTitle?: string }> {
     const errors: string[] = [];
+
+    // Fetch video metadata in parallel (non-blocking — we don't wait for it to start transcript fetch)
+    const metadataPromise = fetchVideoMetadata(videoId);
 
     // ─── Strategy 1: Supadata API (primary) ───────────────────────────────────
     try {
         console.log(`[Transcript] 1. Trying Supadata API for: ${videoId}`);
-        const transcript = await fetchSupadataTranscript(videoId);
-        if (transcript) return transcript;
+        const result = await fetchSupadataTranscript(videoId);
+        const meta = await metadataPromise;
+
+        // Prefer YouTube API title (more reliable/complete) over Supadata title
+        return {
+            transcript: result.transcript,
+            title: meta.title || result.title,
+            channelTitle: meta.channelTitle,
+            lang: result.lang,
+        };
     } catch (err: any) {
         const msg = err?.message ?? String(err);
         console.warn(`[Transcript] ⚠️ Supadata failed: ${msg}`);
@@ -27,9 +66,10 @@ export async function fetchYouTubeTranscriptAPI(videoId: string): Promise<string
         console.log(`[Transcript] 2. Trying youtube-transcript scraper for: ${videoId}`);
         const items = await YoutubeTranscript.fetchTranscript(videoId);
         if (items && items.length > 0) {
-            const text = items.map(t => t.text).join(' ');
-            console.log(`[Transcript] ✅ Scraper succeeded (${text.length} chars)`);
-            return text;
+            const transcript = items.map(t => t.text).join(' ');
+            console.log(`[Transcript] ✅ Scraper succeeded (${transcript.length} chars)`);
+            const meta = await metadataPromise;
+            return { transcript, title: meta.title, channelTitle: meta.channelTitle };
         }
         throw new Error('Scraper returned empty transcript');
     } catch (err: any) {
@@ -52,54 +92,34 @@ export async function fetchYouTubeTranscriptAPI(videoId: string): Promise<string
         }
 
         let auth: any = apiKey;
-
         if (clientId && clientSecret && refreshToken) {
-            console.log('[Transcript] Using OAuth authentication');
             const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
             oauth2Client.setCredentials({ refresh_token: refreshToken });
             auth = oauth2Client;
         }
 
         const youtube = google.youtube({ version: 'v3', auth });
-
-        const captionsResponse = await youtube.captions.list({
-            part: ['snippet'],
-            videoId,
-        });
-
+        const captionsResponse = await youtube.captions.list({ part: ['snippet'], videoId });
         const captions = captionsResponse.data.items;
-        if (!captions || captions.length === 0) {
-            throw new Error('No captions found via YouTube Data API');
-        }
+        if (!captions || captions.length === 0) throw new Error('No captions found via YouTube Data API');
 
-        console.log(`[Transcript] Found ${captions.length} caption tracks`);
-
-        // Prefer manual English, then any English, then whatever's there
         let track = captions.find(c => c.snippet?.language?.startsWith('en') && c.snippet.trackKind !== 'ASR');
         if (!track) track = captions.find(c => c.snippet?.language?.startsWith('en'));
         if (!track) track = captions[0];
 
         let response: any;
         try {
-            response = await youtube.captions.download(
-                { id: track.id!, tfmt: 't3' },
-                { responseType: 'arraybuffer' }
-            );
+            response = await youtube.captions.download({ id: track.id!, tfmt: 't3' }, { responseType: 'arraybuffer' });
         } catch {
-            console.log('[Transcript] t3 format failed, trying vtt...');
-            response = await youtube.captions.download(
-                { id: track.id!, tfmt: 'vtt' },
-                { responseType: 'arraybuffer' }
-            );
+            response = await youtube.captions.download({ id: track.id!, tfmt: 'vtt' }, { responseType: 'arraybuffer' });
         }
 
-        const buffer = Buffer.from(response.data as any);
-        const captionText = buffer.toString('utf-8');
-        if (!captionText) throw new Error('Empty transcript downloaded from API');
+        const transcript = parseCaption(Buffer.from(response.data as any).toString('utf-8'));
+        if (!transcript) throw new Error('Empty transcript downloaded from API');
 
-        const transcript = parseCaption(captionText);
         console.log(`[Transcript] ✅ YouTube Data API succeeded (${transcript.length} chars)`);
-        return transcript;
+        const meta = await metadataPromise;
+        return { transcript, title: meta.title, channelTitle: meta.channelTitle };
 
     } catch (err: any) {
         const msg = err?.message ?? String(err);
@@ -107,9 +127,7 @@ export async function fetchYouTubeTranscriptAPI(videoId: string): Promise<string
         errors.push(`YouTube API: ${msg}`);
     }
 
-    throw new Error(
-        `Could not fetch transcript after 3 attempts:\n` + errors.join('\n')
-    );
+    throw new Error(`Could not fetch transcript after 3 attempts:\n` + errors.join('\n'));
 }
 
 // ─── Caption parsers ─────────────────────────────────────────────────────────
@@ -118,68 +136,42 @@ function parseCaption(content: string): string {
     if (content.startsWith('WEBVTT')) return parseVTT(content);
     let text = content.replace(/<[^>]*>/g, ' ');
     text = text
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
+        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"').replace(/&#39;/g, "'");
     return text.replace(/\s+/g, ' ').trim();
 }
 
 function parseVTT(content: string): string {
-    return content
-        .split('\n')
-        .map(l => l.trim())
+    return content.split('\n').map(l => l.trim())
         .filter(l => l !== 'WEBVTT' && l && !l.includes('-->'))
-        .join(' ')
-        .trim();
+        .join(' ').trim();
 }
 
 /**
- * Extract video ID from ANY YouTube URL format a user might paste:
- * - https://www.youtube.com/watch?v=ID
- * - https://youtu.be/ID
- * - https://youtube.com/shorts/ID
- * - https://m.youtube.com/watch?v=ID  (mobile)
- * - https://music.youtube.com/watch?v=ID
- * - youtu.be/ID  (no protocol)
- * - youtube.com/watch?v=ID  (no protocol)
- * - Raw 11-char video ID
+ * Extract video ID from ANY YouTube URL format:
+ * https://www.youtube.com/watch?v=ID, youtu.be/ID, m.youtube.com/...,
+ * music.youtube.com/..., youtube.com/shorts/ID, or raw 11-char ID
  */
 export function extractVideoId(url: string): string | null {
     try {
         url = url.trim();
-
-        // If it looks like a bare video ID (11 alphanumeric/dash/underscore chars)
         if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
 
-        // Normalise: add https:// if no protocol given, so URL() doesn't throw
-        if (!/^https?:\/\//i.test(url)) {
-            url = "https://" + url;
-        }
+        if (!/^https?:\/\//i.test(url)) url = "https://" + url;
 
-        // Use the URL API for reliable parsing
         let parsed: URL;
-        try {
-            parsed = new URL(url);
-        } catch {
-            return null;
-        }
+        try { parsed = new URL(url); } catch { return null; }
 
         const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "").replace(/^music\./, "");
 
-        // youtu.be short links
         if (host === "youtu.be") {
             const id = parsed.pathname.slice(1).split("/")[0];
             return /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null;
         }
 
         if (host === "youtube.com") {
-            // /watch?v=ID
             const v = parsed.searchParams.get("v");
             if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v;
-
-            // /shorts/ID  or  /embed/ID  or  /v/ID
             const pathMatch = parsed.pathname.match(/\/(?:shorts|embed|v)\/([a-zA-Z0-9_-]{11})/);
             if (pathMatch) return pathMatch[1];
         }
