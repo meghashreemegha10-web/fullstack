@@ -136,17 +136,54 @@ function parseVTT(content: string): string {
 }
 
 /**
- * Extract video ID from various YouTube URL formats
+ * Extract video ID from ANY YouTube URL format a user might paste:
+ * - https://www.youtube.com/watch?v=ID
+ * - https://youtu.be/ID
+ * - https://youtube.com/shorts/ID
+ * - https://m.youtube.com/watch?v=ID  (mobile)
+ * - https://music.youtube.com/watch?v=ID
+ * - youtu.be/ID  (no protocol)
+ * - youtube.com/watch?v=ID  (no protocol)
+ * - Raw 11-char video ID
  */
 export function extractVideoId(url: string): string | null {
     try {
         url = url.trim();
-        if (url.includes('youtu.be/')) return url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)?.[1] || null;
-        if (url.includes('youtube.com/watch')) return url.match(/[?&]v=([a-zA-Z0-9_-]{11})/)?.[1] || null;
-        if (url.includes('youtube.com/embed/')) return url.match(/embed\/([a-zA-Z0-9_-]{11})/)?.[1] || null;
-        if (url.includes('youtube.com/v/')) return url.match(/\/v\/([a-zA-Z0-9_-]{11})/)?.[1] || null;
-        if (url.includes('youtube.com/shorts/')) return url.match(/shorts\/([a-zA-Z0-9_-]{11})/)?.[1] || null;
+
+        // If it looks like a bare video ID (11 alphanumeric/dash/underscore chars)
         if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+
+        // Normalise: add https:// if no protocol given, so URL() doesn't throw
+        if (!/^https?:\/\//i.test(url)) {
+            url = "https://" + url;
+        }
+
+        // Use the URL API for reliable parsing
+        let parsed: URL;
+        try {
+            parsed = new URL(url);
+        } catch {
+            return null;
+        }
+
+        const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "").replace(/^music\./, "");
+
+        // youtu.be short links
+        if (host === "youtu.be") {
+            const id = parsed.pathname.slice(1).split("/")[0];
+            return /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null;
+        }
+
+        if (host === "youtube.com") {
+            // /watch?v=ID
+            const v = parsed.searchParams.get("v");
+            if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v;
+
+            // /shorts/ID  or  /embed/ID  or  /v/ID
+            const pathMatch = parsed.pathname.match(/\/(?:shorts|embed|v)\/([a-zA-Z0-9_-]{11})/);
+            if (pathMatch) return pathMatch[1];
+        }
+
         return null;
     } catch {
         return null;

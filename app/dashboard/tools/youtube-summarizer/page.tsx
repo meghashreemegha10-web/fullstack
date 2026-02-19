@@ -56,9 +56,9 @@ export default function YouTubeSummarizerPage() {
                             YouTube Video URL
                         </label>
                         <input
-                            type="url"
+                            type="text"
                             id="url"
-                            placeholder="https://www.youtube.com/watch?v=..."
+                            placeholder="Paste any YouTube URL or video ID — e.g. youtu.be/abc, youtube.com/watch?v=abc, youtube.com/shorts/abc, or just abc"
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
                             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
