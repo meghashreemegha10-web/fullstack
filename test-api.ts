@@ -23,11 +23,13 @@ async function testTranscript() {
 
         // Fetch transcript
         console.log('⏳ Fetching transcript...\n');
-        const transcript = await fetchYouTubeTranscriptAPI(videoId);
+        const result = await fetchYouTubeTranscriptAPI(videoId);
 
         console.log('✅ SUCCESS!');
-        console.log(`📝 Transcript length: ${transcript.length} characters`);
-        console.log(`\n📄 First 500 characters:\n${transcript.substring(0, 500)}...\n`);
+        if (result.title) console.log(`🎬 Title: ${result.title}`);
+        if (result.channelTitle) console.log(`📺 Channel: ${result.channelTitle}`);
+        console.log(`📝 Transcript length: ${result.transcript.length} characters`);
+        console.log(`\n📄 First 500 characters:\n${result.transcript.substring(0, 500)}...\n`);
 
     } catch (error: any) {
         console.error('\n❌ ERROR:', error.message);
