@@ -16,31 +16,38 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
 
     const { email, password } = validatedFields.data
 
+    // Check user status BEFORE signing in so we can return proper error messages.
+    // We cannot rely on throwing inside authorize() because NextAuth v5 wraps that
+    // in a CallbackRouteError in production, making it unreliable.
+    const user = await db.user.findUnique({ where: { email } })
+    if (user) {
+        const passwordsMatch = await bcrypt.compare(password, user.password || "")
+        if (passwordsMatch) {
+            if ((user as any).rejected) {
+                return { error: "Your account has been rejected." }
+            }
+            if (!user.approved) {
+                return { error: "Your account is waiting for admin approval." }
+            }
+        }
+    }
+
     try {
         await signIn("credentials", {
             email,
             password,
-            redirectTo: "/dashboard", // Default redirect, middleware/callback might override
+            redirectTo: "/dashboard",
         })
     } catch (error) {
         if (error instanceof AuthError) {
             switch (error.type) {
                 case "CredentialsSignin":
                     return { error: "Invalid credentials!" }
-                case "CallbackRouteError":
-                    // @ts-ignore
-                    const errorMsg = error.cause?.err?.message;
-                    if (errorMsg === "Account waiting for approval.") {
-                        return { error: "Your account is waiting for approval." }
-                    }
-                    if (errorMsg === "Account rejected.") {
-                        return { error: "Your account has been rejected." }
-                    }
-                    return { error: "Invalid credentials!" }
                 default:
                     return { error: "Something went wrong!" }
             }
         }
+        // NEXT-AUTH redirects by throwing a NEXT_REDIRECT — rethrow it
         throw error
     }
 }

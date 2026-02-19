@@ -21,14 +21,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
                     const passwordsMatch = await bcrypt.compare(password, user.password || "")
                     if (passwordsMatch) {
-                        // @ts-ignore
-                        if (user.rejected) {
-                            throw new Error("Account rejected.")
+                        // Return user with status fields — do NOT throw here.
+                        // Throwing inside authorize() causes a CallbackRouteError in
+                        // production (NextAuth v5) that swallows the real error message.
+                        // The login action checks these flags and returns the right message.
+                        return {
+                            id: user.id,
+                            name: user.name,
+                            email: user.email,
+                            role: (user as any).role,
+                            approved: user.approved,
+                            rejected: (user as any).rejected ?? false,
                         }
-                        if (!user.approved) {
-                            throw new Error("Account waiting for approval.")
-                        }
-                        return user
                     }
                 }
 
