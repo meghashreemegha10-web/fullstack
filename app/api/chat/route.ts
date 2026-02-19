@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
                     If the answer is not in the document, say so.
                     
                     Document Content:
-                    ${document.content.substring(0, 15000)}` // Limit context size just in case
+                    ${(document.content ?? "").substring(0, 15000)}` // Limit context size just in case
                     },
                     {
                         role: "user",
