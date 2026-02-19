@@ -13,13 +13,11 @@ export interface SearchResult {
 export async function searchWeb(query: string): Promise<SearchResult[]> {
     try {
         console.log(`Searching web for: ${query}`);
-        const response = await firecrawl.search(query, {
-            pageOptions: {
-                fetchPageContent: true
-            },
-            searchOptions: {
-                limit: 3
-            }
+
+        // pageOptions/fetchPageContent were removed in newer Firecrawl SDK versions.
+        // The current API accepts limit directly in the options object.
+        const response = await (firecrawl.search as any)(query, {
+            limit: 3
         });
 
         if (!response.data || response.data.length === 0) {
@@ -35,7 +33,7 @@ export async function searchWeb(query: string): Promise<SearchResult[]> {
 
     } catch (error) {
         console.error("Firecrawl search failed:", error);
-        // Fallback or empty to allow chat to proceed with just docs
+        // Return empty so chat can still proceed with document context
         return [];
     }
 }
